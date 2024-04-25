@@ -1,0 +1,63 @@
+/* Reset default margin and padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: white;
+}
+
+/* Body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #333333;
+}
+
+/* Topbar styles */
+#topbar {
+    background-color: #104f4f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+#topbar_left {
+    display: flex;
+    align-items: center;
+}
+
+#logo img {
+    width: 50px; /* Adjust as needed */
+    height: auto; /* Maintain aspect ratio */
+}
+
+#title h1 {
+    margin-left: 10px;
+}
+
+#topbar_right {
+    display: flex;
+    align-items: center;
+}
+
+#new_repo_button {
+    background-color: green;
+    color: white;
+    width: 30px; /* Adjust as needed */
+    height: 30px; /* Adjust as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* Content styles */
+#content {
+    margin-top: 20px; /* Adjust as needed */
+    background-color: #222222;
+}
+
+#repo_list {
+    width: 60%;
+    margin: 0 auto; /* Center the list */
+}
