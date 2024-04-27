@@ -22,7 +22,9 @@ async fn main() -> Result<()> {
         .route("/index.css", routing::get(getters::index_css))
         .route("/images/logo.png", routing::get(getters::logo))
         .route("/index.js", routing::get(getters::index_js))
-        .route("/internal/repolist", routing::get(getters::repolist));
+        .route("/internal/repolist", routing::get(getters::repolist))
+        .route("/internal/add_repo", routing::post(internal::add_repo))
+        .route("/internal/file_list", routing::get(internal::get_filelist));
     let router_service = routes.into_make_service();
     axum::Server::bind(&ip.parse()?)
         .serve(router_service)
