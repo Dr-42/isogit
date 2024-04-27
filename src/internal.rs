@@ -2,6 +2,7 @@ use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::{extract::Json, http::Response};
 use axum_macros::debug_handler;
+use git2::TreeEntry;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -118,6 +119,37 @@ struct FileDetails {
     tree_id: String,
 }
 
+fn tree_recur(
+    entry: TreeEntry,
+    repo: &git2::Repository,
+    parent_name: Option<String>,
+) -> Vec<FileDetails> {
+    let mut files: Vec<FileDetails> = Vec::new();
+    if entry.kind() == Some(git2::ObjectType::Tree) {
+        let tree = repo.find_tree(entry.id()).unwrap();
+        for tree_entry in tree.iter() {
+            if tree_entry.kind() == Some(git2::ObjectType::Tree) {
+                let mut name = tree_entry.name().unwrap().to_string();
+                if let Some(parent_name) = &parent_name {
+                    name = format!("{}/{}", parent_name, name);
+                }
+                let mut children = tree_recur(tree_entry, repo, Some(name));
+                files.append(&mut children);
+            } else {
+                let name = tree_entry.name().unwrap().to_string();
+                let name = if let Some(parent_name) = &parent_name {
+                    format!("{}/{}", parent_name, name)
+                } else {
+                    name
+                };
+                let tree_id = tree_entry.id().to_string();
+                files.push(FileDetails { name, tree_id });
+            }
+        }
+    }
+    files
+}
+
 #[debug_handler]
 pub async fn get_filelist(Query(query): Query<HashMap<String, String>>) -> Response<String> {
     let name = query.get("name").unwrap();
@@ -148,9 +180,15 @@ pub async fn get_filelist(Query(query): Query<HashMap<String, String>>) -> Respo
         let commit_id = oid.to_string();
         let mut files: Vec<FileDetails> = Vec::new();
         for entry in tree.iter() {
-            let name = entry.name().unwrap().to_string();
-            let tree_id = entry.id().to_string();
-            files.push(FileDetails { name, tree_id });
+            if entry.kind() == Some(git2::ObjectType::Tree) {
+                let name = entry.name().unwrap().to_string();
+                let mut children = tree_recur(entry, &repo, Some(name));
+                files.append(&mut children);
+            } else {
+                let name = entry.name().unwrap().to_string();
+                let tree_id = entry.id().to_string();
+                files.push(FileDetails { name, tree_id });
+            }
         }
         commits.push(CommitDetails { commit_id, files });
     }
